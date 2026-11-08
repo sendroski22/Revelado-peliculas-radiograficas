@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simulador revelado de películas radiográficas tradicionales</title>
+<meta name="description" content="Simulador interactivo del revelado manual de películas radiográficas: cuarto oscuro, revelado, aclarado, fijado, lavado y secado. CFGS Imagen para el diagnóstico y medicina nuclear.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Source+Serif+4:opsz,wght@8..60,500;8..60,700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#f4f1ea; --card:#fffdf9; --line:#e2dbcc; --line-strong:#cfc6b3;
+  --ink:#22303a; --muted:#5f6a73;
+  --accent:#1e6b73; --accent-soft:#e2eeed;
+  --red:#b4342b; --red-soft:#f7e6e2;
+  --ok:#2e7448; --ok-soft:#e5f1e8;
+  --radius:10px;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font:17px/1.6 "Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif}
+h1,h2,h3{font-family:"Source Serif 4",Georgia,"Times New Roman",serif;line-height:1.2;font-weight:700}
+a{color:var(--accent)}
+.wrap{max-width:1120px;margin:0 auto;padding:0 20px}
+
+/* ---------- Cabecera ---------- */
+.site{background:var(--card);border-top:5px solid var(--red);border-bottom:1px solid var(--line)}
+.site .wrap{padding-top:26px;padding-bottom:22px}
+.site h1{font-size:clamp(1.45rem,3.2vw,2.15rem);margin:0}
+.site .sub{margin:.35rem 0 .55rem;color:var(--muted);font-size:1.02rem}
+.linkbtn{background:none;border:0;padding:0;color:var(--accent);font:inherit;font-weight:700;
+  text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.linkbtn:hover{color:var(--ink)}
+
+/* ---------- Barra de pasos y modo ---------- */
+.toolbar{display:flex;flex-wrap:wrap;gap:18px 28px;align-items:center;justify-content:space-between;margin:26px 0 8px}
+.steps{display:flex;list-style:none;margin:0;padding:0;flex:1 1 560px;min-width:0}
+.steps li{flex:1;text-align:center;position:relative;font-size:.8rem;color:var(--muted);padding:0 2px}
+.steps li:not(:first-child)::before{content:"";position:absolute;top:15px;right:50%;width:100%;height:2px;background:var(--line-strong);z-index:0}
+.steps .n{position:relative;z-index:1;display:grid;place-items:center;width:32px;height:32px;margin:0 auto 4px;border-radius:50%;
+  background:var(--card);border:2px solid var(--line-strong);font-weight:700;font-size:.9rem;color:var(--muted)}
+.steps li.done .n{background:var(--accent);border-color:var(--accent);color:#fff}
+.steps li.done:not(:first-child)::before,.steps li.cur:not(:first-child)::before{background:var(--accent)}
+.steps li.cur .n{background:var(--ink);border-color:var(--ink);color:#fff}
+.steps li.cur{color:var(--ink);font-weight:700}
+.modebox{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.switch{display:inline-flex;align-items:center;gap:10px;cursor:pointer;font-weight:700;user-select:none}
+.switch input{position:absolute;opacity:0;width:1px;height:1px}
+.switch .track{width:46px;height:26px;border-radius:13px;background:var(--line-strong);position:relative;transition:background .25s}
+.switch .track::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .25s;box-shadow:0 1px 2px rgba(0,0,0,.25)}
+.switch input:checked + .track{background:var(--red)}
+.switch input:checked + .track::after{transform:translateX(20px)}
+.switch input:focus-visible + .track{outline:3px solid var(--accent);outline-offset:2px}
+.restart{background:none;border:1.5px solid var(--line-strong);border-radius:8px;padding:.35rem .8rem;font:inherit;font-size:.9rem;color:var(--muted);cursor:pointer}
+.restart:hover{border-color:var(--ink);color:var(--ink)}
+.modenote{margin:6px 0 0;padding:10px 14px;border-left:4px solid var(--red);background:var(--red-soft);border-radius:0 8px 8px 0;font-size:.95rem}
+
+/* ---------- Escenario ---------- */
+.steptitle{margin:22px 0 12px;font-size:1.45rem}
+.steptitle small{display:block;font-family:"Atkinson Hyperlegible",sans-serif;font-size:.8rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--red);margin-bottom:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius)}
+.stage{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(0,1fr);gap:18px}
+.scene{overflow:hidden;padding:0}
+.scene svg{display:block;width:100%;height:auto}
+.filmcard{padding:16px 18px;display:flex;flex-direction:column}
+.filmcard h3{margin:0 0 10px;font-size:1.05rem}
+.filmholder{background:#d9d3c6;border-radius:8px;padding:14px;display:flex;justify-content:center}
+.filmholder svg{width:100%;max-width:190px;height:auto;display:block;filter:drop-shadow(0 2px 3px rgba(0,0,0,.18))}
+.filmcap{margin:10px 0 0;font-size:.93rem;color:var(--muted);min-height:2.8em}
+.latent{display:flex;gap:8px;align-items:center;font-size:.9rem;margin-top:8px;cursor:pointer}
+.latent input{width:18px;height:18px;accent-color:var(--accent)}
+
+.explain{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
+.explain .card{padding:16px 20px}
+.tag{display:inline-block;font-size:.75rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;padding:2px 9px;border-radius:4px;margin-bottom:4px}
+.tag.tech{background:var(--accent-soft);color:var(--accent)}
+.tag.film{background:var(--red-soft);color:var(--red)}
+.explain p{margin:.45rem 0}
+
+.controls{margin-top:18px;padding:16px 20px}
+.actions{display:flex;flex-wrap:wrap;gap:10px}
+.btn{font:inherit;font-weight:700;border:1.5px solid var(--ink);background:var(--card);color:var(--ink);
+  padding:.55rem 1.05rem;border-radius:8px;cursor:pointer;transition:background .15s,color .15s,opacity .15s}
+.btn:hover:not(:disabled){background:var(--ink);color:#fff}
+.btn.primary{background:var(--ink);color:#fff}
+.btn.primary:hover:not(:disabled){background:#111b22}
+.btn.next{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.next:hover{background:#155259}
+.btn.risk{border-style:dashed;border-color:var(--red);color:var(--red)}
+.btn.risk:hover:not(:disabled){background:var(--red);color:#fff}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.timer{display:flex;align-items:center;gap:14px;margin-top:14px;flex-wrap:wrap}
+.timer .lbl{font-size:.82rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:700}
+.timer .clock{font-variant-numeric:tabular-nums;font-weight:700;font-size:1.15rem}
+.bar{flex:1 1 200px;height:10px;background:#ece6d9;border-radius:5px;position:relative;overflow:visible}
+.bar i{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--accent);border-radius:5px}
+.bar b{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink);left:100%}
+.status{margin:12px 0 0;min-height:1.6em;font-weight:700;color:var(--accent)}
+
+/* ---------- Resultado ---------- */
+.final h2{font-size:1.5rem}
+.resultgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:22px;align-items:start}
+.lightbox{background:#2b3035;border-radius:12px;padding:18px 18px 12px;text-align:center}
+.lightbox .screen{background:#f6fbff;border-radius:6px;padding:16px;box-shadow:0 0 34px rgba(210,230,255,.45)}
+.lightbox svg{width:100%;max-width:260px;height:auto;display:block;margin:0 auto}
+.lightbox .lbname{color:#c9d1d8;font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;margin-top:10px}
+.mission{border:2px solid var(--ok);background:var(--ok-soft);border-radius:var(--radius);padding:20px 22px}
+.mission h2{margin:0;color:var(--ok);letter-spacing:.06em;font-size:1.7rem}
+.mission p{margin:.4rem 0 0;font-size:1.08rem}
+.failed{border:2px solid var(--red);background:var(--red-soft);border-radius:var(--radius);padding:20px 22px}
+.failed h2{margin:0;color:var(--red);font-size:1.4rem}
+.failed ul{margin:.6rem 0 0;padding-left:1.2rem}
+.failed li{margin:.35rem 0}
+.final .btnrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.section{margin-top:34px}
+.section > h2{margin:0 0 12px}
+.tablewrap{overflow-x:auto}
+table.sum{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;font-size:.95rem}
+table.sum th,table.sum td{padding:10px 12px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}
+table.sum thead th{background:#ece5d6;font-size:.85rem;text-transform:uppercase;letter-spacing:.04em}
+table.sum tbody th{white-space:nowrap}
+table.sum tr:last-child td,table.sum tr:last-child th{border-bottom:0}
+.note{font-size:.92rem;color:var(--muted);margin:.6rem 0 0}
+.auto{margin-top:16px;padding:14px 18px;border-left:4px solid var(--accent);background:var(--accent-soft);border-radius:0 8px 8px 0}
+.auto p{margin:0}
+
+.quiz{display:grid;gap:16px}
+.q{padding:16px 20px}
+.q h3{margin:0 0 10px;font-size:1.05rem;font-family:"Atkinson Hyperlegible",sans-serif}
+.q h3 span{color:var(--red);margin-right:6px}
+.opts{display:grid;gap:8px}
+.opt{display:flex;gap:10px;align-items:flex-start;text-align:left;font:inherit;background:var(--card);border:1.5px solid var(--line-strong);border-radius:8px;padding:.55rem .8rem;cursor:pointer;color:var(--ink)}
+.opt:hover:not(:disabled){border-color:var(--ink)}
+.opt .l{flex:0 0 26px;height:26px;border-radius:50%;display:grid;place-items:center;background:#ece5d6;font-weight:700;font-size:.85rem}
+.opt:disabled{cursor:default}
+.opt.right{border-color:var(--ok);background:var(--ok-soft)}
+.opt.right .l{background:var(--ok);color:#fff}
+.opt.wrong{border-color:var(--red);background:var(--red-soft)}
+.opt.wrong .l{background:var(--red);color:#fff}
+.fb{margin:10px 0 0;font-size:.95rem}
+.fb strong.ok{color:var(--ok)} .fb strong.ko{color:var(--red)}
+.score{font-weight:700;font-size:1.1rem;padding:14px 18px}
+
+/* ---------- Diálogo ---------- */
+dialog{border:0;border-radius:12px;padding:0;width:min(640px,calc(100% - 32px));color:var(--ink);background:var(--card);box-shadow:0 20px 50px rgba(0,0,0,.3)}
+dialog::backdrop{background:rgba(25,30,35,.55)}
+.dlghead{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--line)}
+.dlghead h2{margin:0;font-size:1.3rem}
+.close{background:none;border:0;font-size:1.7rem;line-height:1;cursor:pointer;color:var(--muted);padding:0 4px}
+.close:hover{color:var(--ink)}
+.dlgbody{padding:16px 20px 20px}
+.curr{width:100%;border-collapse:collapse;font-size:.96rem}
+.curr th,.curr td{padding:10px 12px;border:1px solid var(--line);text-align:left;vertical-align:top}
+.curr th{background:#f1ece1;width:34%}
+
+/* ---------- Pie ---------- */
+footer{margin-top:50px;border-top:1px solid var(--line);background:var(--card)}
+footer .wrap{padding-top:20px;padding-bottom:26px;font-size:.88rem;color:var(--muted)}
+footer p{margin:.3rem 0}
+
+/* ---------- Escenas SVG ---------- */
+.lbl{font:600 12px "Atkinson Hyperlegible",sans-serif;fill:#6d655c}
+.lbl.light{fill:#d8dee3}
+.tint{opacity:0;fill:#000;mix-blend-mode:multiply;transition:opacity .8s,fill .8s;pointer-events:none}
+.s-safe .tint{fill:#8b1f15;opacity:.72}
+.s-dark .tint{fill:#111;opacity:.9}
+.wl-glow{opacity:0;transition:opacity .5s}
+.s-white .wl-glow{opacity:.55}
+.wl-bulb{fill:#9b9183;transition:fill .5s}
+.s-white .wl-bulb{fill:#fff6c4}
+.sl-glow{opacity:0;transition:opacity .6s}
+.s-safe .sl-glow{opacity:.3}
+.sl-lens{fill:#5d2722;transition:fill .6s}
+.s-safe .sl-lens{fill:#ff4d3b}
+.sign{fill:#3d322e;transition:fill .5s}
+.sign-t{fill:#8a7d76;font:700 11px "Atkinson Hyperlegible",sans-serif;transition:fill .5s}
+.s-closed .sign{fill:#d43b2e}
+.s-closed .sign-t{fill:#fff}
+.door{transform-box:fill-box;transform-origin:right center;transition:transform .9s ease}
+.s-open .door{transform:scaleX(.13)}
+.lid{transform-box:fill-box;transform-origin:left bottom;transition:transform .7s ease}
+.s-chassis .lid{transform:rotate(-115deg)}
+.dr-film{opacity:0;transform:translateY(60px);transition:transform 1s ease,opacity .5s}
+.s-chassis .dr-film{opacity:1;transform:translateY(0)}
+.s-hung .dr-film{opacity:1;transform:translate(235px,-4px)}
+.dr-hanger{opacity:0;transition:opacity .4s .6s}
+.s-hung .dr-hanger{opacity:1}
+
+.tk-film{transition:transform .9s ease-in-out}
+.tk-film.instant{transition:none}
+.tk-inner.shake{animation:shake .28s 5}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px) rotate(-1deg)}75%{transform:translateX(4px) rotate(1deg)}}
+.tk-label{font:700 12px "Atkinson Hyperlegible",sans-serif;fill:#7b736a;letter-spacing:.06em}
+.tk-label.on{fill:#1e6b73}
+.tk-under{opacity:0;transition:opacity .3s}
+.tk-under.on{opacity:1}
+.tk-bub{transition:opacity .4s}
+.stream{opacity:0;transition:opacity .4s;stroke-dasharray:10 6;animation:flow .5s linear infinite}
+.s-wash .stream{opacity:1}
+@keyframes flow{to{stroke-dashoffset:-16}}
+.tk-part{opacity:0;transition:opacity .4s}
+.s-wash .tk-part{opacity:1}
+.tk-part circle{animation:rise 1.8s ease-out infinite}
+.tk-part circle:nth-child(2){animation-delay:.4s}.tk-part circle:nth-child(3){animation-delay:.8s}
+.tk-part circle:nth-child(4){animation-delay:1.2s}.tk-part circle:nth-child(5){animation-delay:1.5s}
+@keyframes rise{from{transform:translateY(0);opacity:.95}to{transform:translateY(-46px);opacity:0}}
+
+.dy-film{opacity:0;transform:translateY(-24px);transition:transform .8s ease,opacity .5s}
+.s-dryhung .dy-film{opacity:1;transform:translateY(0)}
+.dy-air{opacity:0;transition:opacity .5s}
+.s-air .dy-air{opacity:1}
+.dy-air path{animation:air 2.2s ease-in-out infinite}
+.dy-air path:nth-child(2){animation-delay:.7s}.dy-air path:nth-child(3){animation-delay:1.4s}
+@keyframes air{0%{transform:translateY(8px);opacity:0}40%{opacity:.9}100%{transform:translateY(-70px);opacity:0}}
+.dy-drops circle{animation:fall 1.4s ease-in infinite}
+.dy-drops circle:nth-child(2){animation-delay:.5s}.dy-drops circle:nth-child(3){animation-delay:.9s}
+@keyframes fall{0%{transform:translateY(0);opacity:1}100%{transform:translateY(80px);opacity:0}}
+
+@media (max-width:860px){
+  .stage,.explain,.resultgrid{grid-template-columns:1fr}
+  .filmholder svg{max-width:170px}
+  .steps li .t{display:none}
+  .steps li.cur .t{display:block}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <h1>Simulador revelado de películas radiográficas tradicionales</h1>
+    <p class="sub">CFGS Imagen para el diagnóstico y medicina Nuclear</p>
+    <button type="button" class="linkbtn" id="btnCurr">Ver relación curricular</button>
+  </div>
+</header>
+
+<dialog id="dlgCurr" aria-labelledby="dlgTitle">
+  <div class="dlghead">
+    <h2 id="dlgTitle">Relación curricular</h2>
+    <button type="button" class="close" id="dlgClose" aria-label="Cerrar">&times;</button>
+  </div>
+  <div class="dlgbody">
+    <table class="curr">
+      <tr><th scope="row">Ciclo</th><td>CFGS Imagen para el diagnóstico y medicina nuclear</td></tr>
+      <tr><th scope="row">Módulo</th><td>1346 - Fundamentos físicos y equipos</td></tr>
+      <tr><th scope="row">Resultado de aprendizaje</th><td>RA3. Procesa y trata imágenes radiográficas, describiendo las características de los receptores y sus aplicaciones.</td></tr>
+      <tr><th scope="row">Criterio(s) de evaluación</th><td>3.d) Se han revelado películas radiográficas.</td></tr>
+    </table>
+  </div>
+</dialog>
+
+<dialog id="dlgMode" aria-labelledby="dlgModeTitle">
+  <div class="dlghead"><h2 id="dlgModeTitle">Cambiar de modo</h2></div>
+  <div class="dlgbody">
+    <p style="margin-top:0">Al cambiar el modo con/sin errores, se reiniciará el proceso de revelado. ¿Estás seguro de que deseas hacerlo ahora?</p>
+    <div class="btnrow" style="display:flex;gap:10px;justify-content:flex-end">
+      <button type="button" class="btn" id="modeNo">No</button>
+      <button type="button" class="btn primary" id="modeYes">Sí</button>
+    </div>
+  </div>
+</dialog>
+
+<main class="wrap">
+  <div class="toolbar">
+    <ol class="steps" id="steps" aria-label="Pasos del revelado"></ol>
+    <div class="modebox">
+      <label class="switch">
+        <input type="checkbox" id="modeErr">
+        <span class="track" aria-hidden="true"></span>
+        Activar modo con errores
+      </label>
+      <button type="button" class="restart" id="btnRestart">Reiniciar</button>
+    </div>
+  </div>
+  <p class="modenote" id="modeNote" hidden>
+    <strong>Modo con errores activado.</strong> Ahora decides tú el orden y cuándo sacar la película de cada baño, y aparecen acciones que un técnico no debería hacer. El simulador no te avisará: al final verás qué ha salido mal.
+  </p>
+
+  <div id="work">
+    <h2 class="steptitle" id="stepTitle"></h2>
+    <div class="stage">
+      <div class="card scene" id="sceneBox"></div>
+      <div class="card filmcard">
+        <h3>Así está tu película</h3>
+        <div class="filmholder" id="filmBox"></div>
+        <p class="filmcap" id="filmCap"></p>
+        <label class="latent" id="latentBox"><input type="checkbox" id="latentChk"> Ver dónde está la imagen latente</label>
+      </div>
+    </div>
+    <div class="explain">
+      <div class="card"><span class="tag tech">Qué hace el técnico</span><div id="txtTech"></div></div>
+      <div class="card"><span class="tag film">Qué le pasa a la película</span><div id="txtFilm"></div></div>
+    </div>
+    <div class="card controls">
+      <div class="actions" id="actions"></div>
+      <div class="timer" id="timer" hidden>
+        <span class="lbl">Tiempo (acelerado)</span>
+        <span class="clock" id="clock">00:00 / 00:00</span>
+        <div class="bar" aria-hidden="true"><i id="barFill"></i><b id="barMark"></b></div>
+      </div>
+      <p class="status" id="status" aria-live="polite"></p>
+    </div>
+  </div>
+
+  <div id="final" class="final" hidden>
+    <h2 class="steptitle"><small>Resultado</small>Tu película en el negatoscopio</h2>
+    <div class="resultgrid">
+      <div class="lightbox"><div class="screen" id="lbFilm"></div><div class="lbname">Negatoscopio</div></div>
+      <div>
+        <div id="verdict"></div>
+        <div class="btnrow">
+          <button type="button" class="btn" id="btnAgain">Revelar otra película</button>
+          <a class="btn next" href="#quiz" style="text-decoration:none">Ir al cuestionario</a>
+        </div>
+      </div>
+    </div>
+
+    <section class="section">
+      <h2>Resumen del proceso</h2>
+      <div class="tablewrap">
+        <table class="sum">
+          <thead><tr><th>Paso</th><th>Qué hace el técnico</th><th>Qué le pasa a la película</th><th>Tiempo orientativo</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">1. Cuarto oscuro</th><td>Cierra la puerta, apaga la luz blanca y trabaja con la luz de seguridad roja. Saca la película del chasis cogiéndola por los bordes.</td><td>Contiene la imagen latente, que es invisible. Es muy sensible a la luz blanca.</td><td>—</td></tr>
+            <tr><th scope="row">2. Revelado</th><td>Sumerge la película, la agita al principio y controla el tiempo y la temperatura.</td><td>Los haluros de plata que recibieron radiación se convierten en plata metálica negra: la imagen se hace visible.</td><td>≈ 5 min a 20 °C</td></tr>
+            <tr><th scope="row">3. Aclarado</th><td>Pasa la película por agua (o baño de paro).</td><td>Se quita el revelador y se detiene el revelado. Así no se ensucia el fijador.</td><td>≈ 30 s</td></tr>
+            <tr><th scope="row">4. Fijado</th><td>Sumerge la película en el fijador. No enciende la luz blanca hasta que el fijado está avanzado.</td><td>Se eliminan los haluros de plata que no recibieron radiación. Desaparece el aspecto lechoso y la imagen queda permanente.</td><td>≈ 10 min</td></tr>
+            <tr><th scope="row">5. Lavado</th><td>Lava la película en agua corriente.</td><td>Se eliminan los restos de productos químicos, para que no amarillee ni se manche.</td><td>≈ 20 min</td></tr>
+            <tr><th scope="row">6. Secado</th><td>Cuelga la película en la secadora o al aire, sin tocar la emulsión.</td><td>Se evapora el agua y la emulsión se endurece. Queda lista para el negatoscopio.</td><td>≈ 15 min</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">Los tiempos son orientativos para un revelado manual: dependen de los productos y de la temperatura. En la práctica se siguen siempre las indicaciones del fabricante.</p>
+      <div class="auto"><p><strong>¿Y la procesadora automática?</strong> Hace los mismos pasos (revelado, fijado, lavado y secado), pero unos rodillos llevan la película de un tanque a otro y la escurren entre baños. Trabaja a unos 35 °C y el proceso completo dura alrededor de 90 segundos.</p></div>
+    </section>
+
+    <section class="section" id="quiz">
+      <h2>Cuestionario</h2>
+      <div class="quiz" id="quizBox"></div>
+      <div class="btnrow" style="margin-top:22px"><button type="button" class="btn next" id="btnAgain2">Revelar otra película</button></div>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>“Web interactiva Simulador revelado de películas radiográficas tradicionales” por Pablo A. Sendra Lleó (2026), disponible bajo licencia <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.es" target="_blank" rel="noopener license">CC BY-NC-SA 4.0</a>.</p>
+    <p>Este material fue desarrollado con la asistencia del modelo de inteligencia artificial <a href="https://claude.ai/" target="_blank" rel="noopener">Claude (Anthropic)</a>.</p>
+  </div>
+</footer>
+
+<script>
+(function(){
+'use strict';
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+const wait = ms => new Promise(r => setTimeout(r, ms));
+
+/* Tiempos simulados (s) y duración real de la animación (ms) */
+const T    = {dev:300, rinse:30, fix:600, wash:1200, dry:900};
+const REAL = {dev:10000, rinse:3000, fix:9000, wash:8000, dry:7000};
+
+const STEP_NAMES = ['Cuarto oscuro','Revelado','Aclarado','Fijado','Lavado','Secado','Resultado'];
+
+const TEXTS = {
+  0:{title:'Antes de empezar',
+     tech:'<p>Acabas de hacer una <strong>radiografía de mano</strong>. La película está dentro del <strong>chasis</strong>, que la protege de la luz.</p><p>Para poder verla hay que revelarla en el <strong>cuarto oscuro</strong>. Vas a hacer tú el trabajo del técnico, paso a paso.</p>',
+     film:'<p>Los rayos X ya han llegado a la película y han dejado una <strong>imagen latente</strong>: los cristales de haluro de plata que recibieron radiación han quedado «marcados», pero todavía <strong>no se ve nada</strong>.</p><p>Marca la casilla «Ver dónde está la imagen latente» para hacerte una idea (en la realidad es invisible).</p>'},
+  1:{title:'Entrada al cuarto oscuro',
+     tech:'<p>El técnico entra con el chasis y <strong>cierra la puerta</strong>. Fuera se enciende el aviso «EN USO» para que nadie abra.</p><p>Apaga la luz blanca y trabaja solo con la <strong>luz de seguridad (inactínica)</strong>, roja o ámbar. Abre el chasis, saca la película <strong>cogiéndola por los bordes</strong> y la coloca en el colgador.</p>',
+     film:'<p>La película sigue teniendo solo la imagen latente. Es <strong>muy sensible a la luz blanca</strong>: si le llega antes de tiempo, se <em>vela</em> (se oscurece entera).</p><p>La luz roja apenas le afecta, porque la película es poco sensible a ese color. Por eso se puede trabajar con ella encendida.</p>'},
+  2:{title:'Baño de revelado',
+     tech:'<p>Sumerge la película en el tanque de <strong>revelador</strong> y la <strong>agita suavemente</strong> al principio, para soltar las burbujas de aire y que el líquido actúe por igual.</p><p>Controla el <strong>tiempo</strong> y la <strong>temperatura</strong> (unos 5 minutos a 20 °C). Al terminar, la saca y la deja escurrir.</p>',
+     film:'<p>El revelador convierte los cristales de haluro de plata que recibieron radiación en <strong>plata metálica negra</strong>. Así, la imagen latente se hace <strong>visible</strong>.</p><p>Donde llegó mucha radiación (alrededor de la mano) la película se pone negra. Los <strong>huesos</strong>, que frenaron más rayos X, quedan claros.</p>'},
+  3:{title:'Aclarado intermedio',
+     tech:'<p>Pasa la película a un tanque de <strong>agua</strong> (o de baño de paro) durante unos segundos, agitándola un poco.</p>',
+     film:'<p>Se quita el revelador que lleva encima. Así <strong>se detiene el revelado</strong> y no se ensucia ni se gasta el fijador del siguiente tanque.</p>'},
+  4:{title:'Baño de fijado',
+     tech:'<p>Sumerge la película en el <strong>fijador</strong> unos 10 minutos. Mientras el fijado no esté avanzado, la luz blanca debe seguir <strong>apagada</strong>.</p>',
+     film:'<p>El fijador <strong>elimina los cristales de haluro de plata que no recibieron radiación</strong>. La película pierde su aspecto lechoso y las zonas claras se vuelven transparentes.</p><p>La imagen queda <strong>permanente</strong>: la luz ya no le afecta. Además, la emulsión se endurece.</p>'},
+  5:{title:'Lavado',
+     tech:'<p>Lava la película en <strong>agua corriente</strong> unos 20 minutos.</p>',
+     film:'<p>El agua arrastra los <strong>restos de fijador</strong> y de otros productos. Si quedan, con el tiempo la película <strong>amarillea y se mancha</strong>, y no se conservaría bien en el archivo.</p>'},
+  6:{title:'Secado',
+     tech:'<p>Escurre la película y la cuelga en la <strong>secadora</strong> (aire templado) o al aire en un sitio sin polvo. <strong>No toca la emulsión</strong> mientras está húmeda.</p>',
+     film:'<p>Se evapora el agua y la emulsión, que estaba blanda, <strong>se endurece</strong>. La película queda lista para verla en el <strong>negatoscopio</strong>.</p>'}
+};
+
+const DEFECTS = {
+  velada:   {t:'Película velada', d:'Le llegó luz blanca antes de terminar el fijado (puerta abierta, luz encendida o fijado incompleto). Toda la película se oscurece y la imagen pierde contraste.'},
+  burbujas: {t:'Manchas claras redondas', d:'No se agitó la película al meterla en el revelador. Quedaron burbujas de aire pegadas y, debajo de ellas, el revelador no actuó.'},
+  subrev:   {t:'Película poco revelada', d:'Se sacó del revelador antes de tiempo. La imagen queda gris y pálida, con poca densidad.'},
+  sobrerev: {t:'Película sobrerrevelada', d:'Estuvo demasiado tiempo en el revelador. Se oscurece en exceso y aparece un velo gris.'},
+  manchas:  {t:'Manchas por no aclarar', d:'Sin el aclarado, el revelador siguió actuando y pasó al fijador, ensuciándolo. Aparecen manchas en la película.'},
+  fijado:   {t:'Fijado incompleto', d:'Se sacó del fijador demasiado pronto. Quedan haluros de plata sin eliminar: la película sigue lechosa y con el tiempo se oscurecerá.'},
+  lavado:   {t:'Lavado insuficiente', d:'Quedaron restos de fijador. Con el tiempo la película amarillea y se mancha (aquí lo ves adelantado).'},
+  huella:   {t:'Huella dactilar', d:'Se tocó la emulsión mientras estaba húmeda y blanda, y quedó marcada.'}
+};
+
+const QUIZ = [
+  {q:'¿Cuál es el orden correcto del revelado manual?',
+   o:['Revelado → Fijado → Aclarado → Lavado → Secado','Revelado → Aclarado → Fijado → Lavado → Secado','Fijado → Revelado → Lavado → Aclarado → Secado','Revelado → Lavado → Secado → Fijado'],
+   a:1, e:'Primero se revela, se aclara para quitar el revelador, se fija, se lava para eliminar los restos químicos y, por último, se seca.'},
+  {q:'¿Por qué se trabaja con luz roja (inactínica) en el cuarto oscuro?',
+   o:['Porque con ella se puede ver la imagen latente antes de revelar','Porque el color rojo acelera el revelado y ahorra tiempo','Porque el calor de esa luz ayuda a secar la emulsión','Porque la película es poco sensible a esa luz y no se vela'],
+   a:3, e:'La película apenas reacciona a la luz roja o ámbar, así que el técnico puede ver lo que hace sin velarla. La imagen latente es invisible con cualquier luz.'},
+  {q:'¿Qué ocurre en la película durante el revelado?',
+   o:['Los haluros expuestos pasan a plata metálica negra y la imagen se ve','Se eliminan los haluros de plata que no recibieron radiación','El agua arrastra los restos de productos químicos de la película','La emulsión se endurece con aire templado y queda lista para leer'],
+   a:0, e:'El revelador actúa sobre los cristales «marcados» por la radiación y los convierte en plata metálica negra: la imagen latente se hace visible.'},
+  {q:'¿Para qué sirve el fijador?',
+   o:['Oscurece los huesos para que destaquen más sobre el fondo','Convierte la imagen visible otra vez en una imagen latente','Elimina los haluros no expuestos y la imagen ya no cambia con la luz','Seca la película para poder colgarla en el negatoscopio'],
+   a:2, e:'El fijador quita los cristales que no se revelaron. La película se vuelve transparente en las zonas claras y la imagen queda estable frente a la luz.'}
+];
+
+/* ---------- Mano radiográfica esquemática (original) ---------- */
+function handShapes(){
+  const rays = [
+    {b:[118,298], a:-38, L:[50,34,26],    W:[13,12,10],    p:12},
+    {b:[133,290], a:-11, L:[86,50,30,22], W:[12,11,10,9],  p:11},
+    {b:[150,286], a:-1,  L:[92,56,34,23], W:[13,12,11,9],  p:11},
+    {b:[167,290], a:8,   L:[86,52,32,22], W:[12,11,10,9],  p:11},
+    {b:[182,296], a:18,  L:[72,40,25,20], W:[11,10,9,8],   p:10}
+  ];
+  let soft = '', bones = '';
+  rays.forEach(r => {
+    const [bx,by] = r.b; let y = by, seg = '';
+    r.L.forEach((len,i) => {
+      const w = r.W[i];
+      seg += `<rect x="${bx-w/2}" y="${y-len}" width="${w}" height="${len}" rx="${(w*0.45).toFixed(1)}"/>`;
+      y -= len + 3;
+    });
+    const total = by - y, sw = r.W[1] + r.p;
+    bones += `<g transform="rotate(${r.a} ${bx} ${by})">${seg}</g>`;
+    soft  += `<g transform="rotate(${r.a} ${bx} ${by})"><rect x="${bx-sw/2}" y="${by-total-4}" width="${sw}" height="${total+16}" rx="${sw/2}"/></g>`;
+  });
+  soft += '<ellipse cx="156" cy="258" rx="47" ry="54"/><ellipse cx="128" cy="282" rx="24" ry="22"/><rect x="108" y="292" width="92" height="140" rx="34"/>';
+  const carp = [[128,320,11,8,-20],[146,323,9,8,0],[162,320,9,7,10],[173,313,6,5,0],
+                [121,303,9,8,-25],[135,299,7,7,0],[151,302,9,11,0],[167,304,9,9,10]];
+  carp.forEach(c => bones += `<ellipse cx="${c[0]}" cy="${c[1]}" rx="${c[2]}" ry="${c[3]}" transform="rotate(${c[4]} ${c[0]} ${c[1]})"/>`);
+  bones += '<path d="M117 344 Q116 333 128 332 L152 332 Q160 333 158 345 L153 362 L152 420 L124 420 L122 362 Z"/>';
+  bones += '<path d="M163 341 Q164 335 172 335 Q181 336 181 344 L180 360 L178 420 L165 420 L164 360 Z"/>';
+  return {soft, bones};
+}
+const HAND = handShapes();
+
+let filmCount = 0;
+function filmSVG(){
+  const id = 'f' + (++filmCount);
+  const bub = [[70,118,8],[222,92,6],[205,335,7],[88,250,5],[244,205,9],[150,58,5],[60,330,6]]
+    .map(c => `<circle class="f-basefill" cx="${c[0]}" cy="${c[1]}" r="${c[2]}"/>`).join('');
+  const drops = [[60,90,5],[100,160,3],[230,140,4],[250,260,6],[200,60,3],[80,300,4],[150,370,5],[270,330,3],[40,210,3],[180,230,4],[120,40,3],[220,380,4]]
+    .map(c => `<circle cx="${c[0]}" cy="${c[1]}" r="${c[2]}" fill="rgba(255,255,255,.28)" stroke="rgba(255,255,255,.65)" stroke-width="1"/>`).join('');
+  let ridges = '';
+  for(let k=0;k<7;k++) ridges += `<ellipse cx="0" cy="0" rx="${5+k*3.4}" ry="${7+k*4.3}"/>`;
+  return `<svg viewBox="0 0 300 400" role="img" aria-label="Película radiográfica de una mano">
+  <defs>
+    <filter id="b${id}"><feGaussianBlur stdDeviation="2.6"/></filter>
+    <filter id="s${id}"><feGaussianBlur stdDeviation="6"/></filter>
+    <mask id="m${id}" maskUnits="userSpaceOnUse" x="0" y="0" width="300" height="400">
+      <rect width="300" height="400" fill="#fff"/>
+      <g fill="#8e8e8e" filter="url(#b${id})">${HAND.soft}</g>
+      <g fill="#3b3b3b" stroke="#1c1c1c" stroke-width="1.7">${HAND.bones}</g>
+      <text x="24" y="54" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="30" fill="#000">D</text>
+    </mask>
+    <clipPath id="c${id}"><rect width="300" height="400" rx="8"/></clipPath>
+  </defs>
+  <g clip-path="url(#c${id})">
+    <rect class="f-base" width="300" height="400"/>
+    <rect class="f-dens" width="300" height="400" fill="#0d1012" mask="url(#m${id})" opacity="0"/>
+    <g class="f-bub" opacity="0">${bub}</g>
+    <rect class="f-fog" width="300" height="400" fill="#0d1012" opacity="0"/>
+    <g class="f-stain" opacity="0" fill="rgba(150,104,38,.55)" filter="url(#s${id})">
+      <ellipse cx="236" cy="300" rx="38" ry="24"/><ellipse cx="60" cy="150" rx="26" ry="34"/><ellipse cx="190" cy="40" rx="30" ry="14"/>
+    </g>
+    <rect class="f-yellow" width="300" height="400" fill="#d6a630" opacity="0" style="mix-blend-mode:multiply"/>
+    <g class="f-finger" opacity="0" transform="translate(232 132) rotate(-18)" fill="none" stroke="rgba(236,226,200,.6)" stroke-width="1.5">${ridges}</g>
+    <g class="f-drops" opacity="0">${drops}</g>
+  </g>
+  <rect width="300" height="400" rx="8" fill="none" stroke="rgba(0,0,0,.28)" stroke-width="2"/>
+</svg>`;
+}
+
+/* ---------- Escenas ---------- */
+function sceneDark(){
+  return `<svg viewBox="0 0 600 360" id="scn" role="img" aria-label="Cuarto oscuro">
+  <rect width="600" height="360" fill="#efeae0"/>
+  <rect y="320" width="600" height="40" fill="#d8d1c3"/>
+  <line x1="150" y1="0" x2="150" y2="34" stroke="#6b6158" stroke-width="2"/>
+  <path d="M130 34 h40 l-6 14 h-28 z" fill="#6b6158"/>
+  <circle class="wl-glow" cx="150" cy="60" r="60" fill="#fff4c2"/>
+  <circle class="wl-bulb" cx="150" cy="53" r="8"/>
+  <text class="lbl" x="150" y="92" text-anchor="middle">luz blanca</text>
+  <g transform="translate(470,88)">
+    <rect width="100" height="232" fill="#fff3c9"/>
+    <g class="door"><rect width="100" height="232" fill="#8a7660"/><rect x="12" y="14" width="76" height="90" fill="none" stroke="#76644f" stroke-width="3"/><rect x="12" y="122" width="76" height="96" fill="none" stroke="#76644f" stroke-width="3"/><circle cx="16" cy="118" r="5" fill="#d9c9a6"/></g>
+    <rect width="100" height="232" fill="none" stroke="#5b4c3d" stroke-width="5"/>
+  </g>
+  <line x1="340" y1="150" x2="440" y2="150" stroke="#7d7469" stroke-width="3"/>
+  <rect x="40" y="256" width="370" height="12" rx="2" fill="#8d7b64"/>
+  <rect x="56" y="268" width="10" height="52" fill="#7a6a56"/><rect x="384" y="268" width="10" height="52" fill="#7a6a56"/>
+  <g class="dr-film">
+    <g class="dr-hanger"><rect x="119" y="152" width="72" height="5" rx="2" fill="#9aa2a8"/><rect x="119" y="152" width="4" height="94" fill="#9aa2a8"/><rect x="187" y="152" width="4" height="94" fill="#9aa2a8"/></g>
+    <rect class="mini-film" x="125" y="160" width="60" height="80" rx="2"/>
+  </g>
+  <rect x="90" y="236" width="130" height="20" rx="3" fill="#46525d"/>
+  <rect class="lid" x="90" y="228" width="130" height="9" rx="2" fill="#5f6d79"/>
+  <text class="lbl light" x="155" y="251" text-anchor="middle">CHASIS</text>
+  <rect class="tint" width="600" height="360"/>
+  <g transform="translate(290,64)">
+    <circle class="sl-glow" cx="26" cy="20" r="80" fill="#ff3b2f"/>
+    <rect width="52" height="40" rx="5" fill="#3d3330"/>
+    <rect class="sl-lens" x="7" y="7" width="38" height="26" rx="3"/>
+  </g>
+  <text class="lbl" x="316" y="124" text-anchor="middle">luz de seguridad</text>
+  <rect class="sign" x="492" y="56" width="56" height="20" rx="4"/>
+  <text class="sign-t" x="520" y="70" text-anchor="middle">EN USO</text>
+</svg>`;
+}
+
+const TANKS = [
+  {n:'REVELADOR', c:'#a37b42'},
+  {n:'AGUA', c:'#9fc3d1'},
+  {n:'FIJADOR', c:'#cfcca2'},
+  {n:'LAVADO', c:'#9fc3d1'}
+];
+const tx = i => 40 + 135*i;
+function sceneTanks(){
+  let back = '', front = '';
+  TANKS.forEach((t,i) => {
+    const x = tx(i);
+    back  += `<rect x="${x}" y="172" width="110" height="158" rx="4" fill="#3f474d"/>`;
+    front += `<rect x="${x+5}" y="190" width="100" height="136" fill="${t.c}" opacity=".84"/>
+      <line x1="${x+5}" y1="190" x2="${x+105}" y2="190" stroke="rgba(255,255,255,.6)" stroke-width="2"/>
+      <rect x="${x}" y="172" width="110" height="158" rx="4" fill="none" stroke="#59636b" stroke-width="6"/>
+      <text class="tk-label" id="tkl${i}" x="${x+55}" y="160" text-anchor="middle">${t.n}</text>
+      <rect class="tk-under" id="tku${i}" x="${x+25}" y="165" width="60" height="3" rx="1.5" fill="#1e6b73"/>`;
+  });
+  front += `<rect x="${tx(0)+92}" y="180" width="6" height="74" rx="3" fill="#f2f2f2" stroke="#999"/><rect x="${tx(0)+93.5}" y="214" width="3" height="40" fill="#c0392b"/><circle cx="${tx(0)+95}" cy="258" r="6" fill="#c0392b"/>
+    <text class="lbl" x="${tx(0)+55}" y="348" text-anchor="middle">20 °C</text>`;
+  return `<svg viewBox="0 0 600 360" id="scn" role="img" aria-label="Tanques de revelado manual">
+  <rect width="600" height="360" fill="#efeae0"/>
+  <rect y="330" width="600" height="30" fill="#d8d1c3"/>
+  <path d="M572 0 V36 H530 V54" fill="none" stroke="#8b949b" stroke-width="8"/>
+  <line class="stream" x1="530" y1="58" x2="530" y2="196" stroke="#8fbfd3" stroke-width="7"/>
+  ${back}
+  <g class="tk-film" id="tkFilm"><g class="tk-inner" id="tkInner">
+    <rect x="-10" y="-10" width="60" height="5" rx="2" fill="#9aa2a8"/>
+    <rect x="-2" y="-7" width="4" height="9" fill="#9aa2a8"/><rect x="38" y="-7" width="4" height="9" fill="#9aa2a8"/>
+    <rect class="mini-film" width="40" height="56" rx="1.5"/>
+    <g class="tk-bub" id="tkBub" opacity="0" fill="rgba(255,255,255,.85)"><circle cx="10" cy="14" r="3"/><circle cx="29" cy="28" r="2.5"/><circle cx="15" cy="43" r="3.5"/><circle cx="31" cy="9" r="2"/></g>
+    <g class="tk-part" fill="#e8e2c8"><circle cx="8" cy="10" r="2"/><circle cx="22" cy="20" r="1.8"/><circle cx="33" cy="12" r="2.2"/><circle cx="14" cy="34" r="1.6"/><circle cx="28" cy="40" r="2"/></g>
+  </g></g>
+  ${front}
+  <rect class="tint" width="600" height="360"/>
+  <g transform="translate(18,16)"><circle class="sl-glow" cx="20" cy="15" r="60" fill="#ff3b2f"/><rect width="40" height="30" rx="4" fill="#3d3330"/><rect class="sl-lens" x="6" y="5" width="28" height="20" rx="3"/></g>
+</svg>`;
+}
+
+function sceneDry(){
+  return `<svg viewBox="0 0 600 360" id="scn" role="img" aria-label="Secadora de películas">
+  <rect width="600" height="360" fill="#efeae0"/>
+  <rect y="330" width="600" height="30" fill="#d8d1c3"/>
+  <rect x="200" y="22" width="200" height="308" rx="6" fill="#dad4c7" stroke="#a69f91" stroke-width="3"/>
+  <rect x="215" y="38" width="170" height="232" rx="3" fill="#f4f2eb" stroke="#bab3a5" stroke-width="2"/>
+  <line x1="226" y1="60" x2="374" y2="60" stroke="#8b949b" stroke-width="4"/>
+  <g class="dy-air" fill="none" stroke="#e0a25a" stroke-width="2.4" stroke-linecap="round">
+    <path d="M250 258 q8 -10 0 -20 q-8 -10 0 -20"/><path d="M300 258 q8 -10 0 -20 q-8 -10 0 -20"/><path d="M350 258 q8 -10 0 -20 q-8 -10 0 -20"/>
+  </g>
+  <g class="dy-film">
+    <rect x="258" y="58" width="84" height="6" rx="2" fill="#9aa2a8"/>
+    <rect class="mini-film" x="265" y="68" width="70" height="96" rx="2"/>
+    <g class="dy-drops" id="dyDrops" fill="#a9cfe0"><circle cx="280" cy="168" r="3"/><circle cx="300" cy="168" r="2.6"/><circle cx="321" cy="168" r="3"/></g>
+  </g>
+  <rect x="230" y="282" width="140" height="30" rx="3" fill="#b9b1a2"/>
+  <g stroke="#8f887b" stroke-width="2"><line x1="240" y1="290" x2="360" y2="290"/><line x1="240" y1="297" x2="360" y2="297"/><line x1="240" y1="304" x2="360" y2="304"/></g>
+  <circle cx="385" cy="296" r="9" fill="#8d8579"/><line x1="385" y1="296" x2="390" y2="290" stroke="#fff" stroke-width="2"/>
+  <text class="lbl" x="300" y="348" text-anchor="middle">SECADORA DE PELÍCULAS</text>
+</svg>`;
+}
+
+/* ---------- Estado ---------- */
+let errorsMode = false;
+let S;
+function freshState(){
+  return {
+    step:0, defects:new Set(), timer:null, busy:false, agitated:false, fixR:0, scene:null,
+    tk:{i:0, down:false},
+    dr:{door:'open', white:true, safe:false, chassis:false, hung:false},
+    film:{dev:0, fogDark:0, fogFix:0, over:0, clear:0, milkyCap:1, bubbles:false, stains:false, yellow:0, finger:false, wet:0, latent:false, inChassis:true}
+  };
+}
+
+/* ---------- Película: dibujo según estado ---------- */
+const hex = h => [1,3,5].map(i => parseInt(h.substr(i,2),16));
+const mixA = (a,b,t) => a.map((v,i) => Math.round(v + (b[i]-v)*t));
+const rgb = a => `rgb(${a.join(',')})`;
+const CREAM = hex('#cfd5bf'), CLEAR = hex('#eef3f5');
+
+function applyFilm(){
+  const f = S.film, d = Math.min(f.dev,1);
+  const base = mixA(CREAM, CLEAR, Math.min(f.clear, f.milkyCap));
+  const fog = Math.min(.78, f.fogDark*d + f.fogFix + f.over);
+  $$('.f-base,.f-basefill').forEach(e => e.setAttribute('fill', rgb(base)));
+  const densOp = (f.latent && f.dev === 0) ? .13 : d;
+  $$('.f-dens').forEach(e => e.setAttribute('opacity', densOp.toFixed(3)));
+  $$('.f-bub').forEach(e => e.setAttribute('opacity', (f.bubbles && d>0) ? 1 : 0));
+  $$('.f-fog').forEach(e => e.setAttribute('opacity', fog.toFixed(3)));
+  $$('.f-stain').forEach(e => e.setAttribute('opacity', f.stains ? Math.min(1, f.clear*1.4).toFixed(2) : 0));
+  $$('.f-yellow').forEach(e => e.setAttribute('opacity', f.yellow));
+  $$('.f-finger').forEach(e => e.setAttribute('opacity', f.finger ? 1 : 0));
+  $$('.f-drops').forEach(e => e.setAttribute('opacity', f.wet.toFixed(2)));
+  let mini = mixA(base, [42,46,48], d*.8);
+  mini = mixA(mini, [17,17,17], fog);
+  $$('.mini-film').forEach(e => e.setAttribute('fill', rgb(mini)));
+  const dd = $('#dyDrops'); if(dd) dd.style.opacity = f.wet;
+  caption();
+}
+
+function caption(){
+  const f = S.film; let t;
+  if(f.inChassis) t = 'Dentro del chasis. Solo tiene la imagen latente: todavía no se ve nada.';
+  else if(f.dev === 0) t = 'Fuera del chasis. La imagen latente sigue siendo invisible.';
+  else if(f.clear < .03) t = 'La imagen ya se ve, pero la película sigue lechosa y sensible a la luz.';
+  else if(f.clear < 1 && S.step === 4) t = 'Fijando: la película se vuelve transparente y la imagen se estabiliza.';
+  else if(f.wet > .05) t = 'Fijada y estable frente a la luz. Todavía está húmeda.';
+  else t = 'Seca y lista para verla en el negatoscopio.';
+  $('#filmCap').textContent = t;
+  $('#latentBox').hidden = f.dev > 0 || S.step > 1;
+}
+
+/* ---------- Interfaz ---------- */
+function buildSteps(){
+  $('#steps').innerHTML = STEP_NAMES.map((n,i) => `<li><span class="n">${i+1}</span><span class="t">${n}</span></li>`).join('');
+}
+function updateSteps(){
+  $$('#steps li').forEach((li,i) => {
+    const k = i + 1;
+    li.classList.toggle('done', S.step > k || (S.step === 7 && k === 7));
+    li.classList.toggle('cur', S.step === k && k !== 7);
+    if(S.step === k) li.setAttribute('aria-current','step'); else li.removeAttribute('aria-current');
+  });
+}
+function status(msg){ $('#status').textContent = msg || ''; }
+
+function setActions(list){
+  const box = $('#actions'); box.innerHTML = '';
+  list.forEach(a => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'btn ' + (a.kind || ''); b.textContent = a.label; b.id = 'act-' + a.id;
+    b.disabled = !!a.disabled; if(a.hidden) b.hidden = true;
+    b.addEventListener('click', async () => {
+      if(S.busy) return;
+      S.busy = true;
+      try { await a.run(b); } finally { S.busy = false; }
+    });
+    box.appendChild(b);
+  });
+}
+const en = (id, on=true) => { const b = $('#act-'+id); if(b) b.disabled = !on; };
+function showNext(n, label){
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'btn next'; b.textContent = label + ' →';
+  b.addEventListener('click', () => goStep(n));
+  $('#actions').appendChild(b); b.focus({preventScroll:true});
+}
+
+/* ---------- Temporizador ---------- */
+const fmt = s => { s = Math.round(s); return String(Math.floor(s/60)).padStart(2,'0') + ':' + String(s%60).padStart(2,'0'); };
+function startTimer(key, {auto=true, maxR=2, onTick, onDone}={}){
+  stopTimer();
+  const target = T[key], real = REAL[key], lim = auto ? 1 : maxR;
+  $('#timer').hidden = false;
+  $('#barMark').style.left = (100/lim) + '%';
+  const t0 = performance.now();
+  const ctl = {r:0, stopped:false, stop(){ this.stopped = true; cancelAnimationFrame(this.raf); return this.r; }};
+  const frame = now => {
+    if(ctl.stopped) return;
+    ctl.r = Math.min((now - t0)/real, lim);
+    $('#clock').textContent = fmt(ctl.r*target) + ' / ' + fmt(target);
+    $('#barFill').style.width = (ctl.r/lim*100) + '%';
+    if(onTick) onTick(ctl.r);
+    if(ctl.r >= lim){ ctl.stopped = true; if(onDone) onDone(ctl.r); return; }
+    ctl.raf = requestAnimationFrame(frame);
+  };
+  ctl.raf = requestAnimationFrame(frame);
+  S.timer = ctl; return ctl;
+}
+function stopTimer(){ if(S && S.timer){ S.timer.stop(); } }
+function hideTimer(){ $('#timer').hidden = true; $('#barFill').style.width = '0'; }
+
+/* ---------- Escena: luces y movimientos ---------- */
+function setScene(kind){
+  if(S.scene === kind) return;
+  S.scene = kind;
+  $('#sceneBox').innerHTML = kind === 'dark' ? sceneDark() : kind === 'tanks' ? sceneTanks() : sceneDry();
+  if(kind === 'tanks') placeFilm(S.tk.i, S.tk.down, true);
+  updateRoom(); applyFilm();
+}
+function updateRoom(){
+  const svg = $('#scn'); if(!svg) return;
+  const d = S.dr, c = svg.classList;
+  c.toggle('s-white', d.white);
+  c.toggle('s-safe', !d.white && d.safe);
+  c.toggle('s-dark', !d.white && !d.safe);
+  c.toggle('s-open', d.door === 'open');
+  c.toggle('s-closed', d.door === 'closed');
+  c.toggle('s-chassis', d.chassis);
+  c.toggle('s-hung', d.hung);
+}
+function placeFilm(i, down, instant){
+  const g = $('#tkFilm'); if(!g) return;
+  if(instant){ g.classList.add('instant'); }
+  g.style.transform = `translate(${tx(i)+35}px, ${down ? 200 : 70}px)`;
+  if(instant){ void g.getBoundingClientRect(); g.classList.remove('instant'); }
+  S.tk = {i, down};
+  TANKS.forEach((t,k) => {
+    const l = $('#tkl'+k), u = $('#tku'+k);
+    if(l) l.classList.toggle('on', k === i); if(u) u.classList.toggle('on', k === i);
+  });
+}
+async function dip(down){ placeFilm(S.tk.i, down); await wait(950); }
+async function moveTo(i){
+  if(S.tk.down) await dip(false);
+  if(S.tk.i !== i){ placeFilm(i, false); await wait(950); }
+}
+function agitate(){
+  const g = $('#tkInner'); if(!g) return;
+  g.classList.remove('shake'); void g.getBoundingClientRect(); g.classList.add('shake');
+}
+function tkBubbles(on){ const b = $('#tkBub'); if(b) b.setAttribute('opacity', on ? 1 : 0); }
+
+function velar(){
+  if(S.film.dev > 0) S.film.fogFix = .45; else S.film.fogDark = .6;
+  S.defects.add('velada'); applyFilm();
+}
+function lightOn(){
+  S.dr.white = true;
+  if(!S.film.inChassis && S.fixR < .5) velar();
+  updateRoom();
+}
+
+/* ---------- Pasos ---------- */
+function goStep(n){
+  stopTimer(); hideTimer(); status('');
+  S.step = n; updateSteps();
+  if(n === 7) return showResult();
+  $('#work').hidden = false; $('#final').hidden = true;
+  const t = TEXTS[n];
+  $('#stepTitle').innerHTML = (n === 0 ? '<small>Situación inicial</small>' : `<small>Paso ${n} de 6</small>`) + t.title;
+  $('#txtTech').innerHTML = t.tech; $('#txtFilm').innerHTML = t.film;
+  [step0,step1,step2,step3,step4,step5,step6][n]();
+  applyFilm();
+}
+
+function step0(){
+  setScene('dark');
+  setActions([{id:'go', label:'Entrar en el cuarto oscuro →', kind:'next', run:()=>goStep(1)}]);
+}
+
+function step1(){
+  setScene('dark');
+  const seq = !errorsMode;
+  setActions([
+    {id:'door', label:'Cerrar la puerta', kind:'primary', run:()=>{
+      S.dr.door = 'closed'; en('door',false); updateRoom();
+      if(seq) en('light');
+      status('Puerta cerrada. Fuera se enciende el aviso «EN USO».');
+    }},
+    {id:'light', label:'Apagar la luz blanca y encender la roja', disabled:seq, run:()=>{
+      S.dr.white = false; S.dr.safe = true; en('light',false); updateRoom();
+      if(errorsMode) en('white');
+      if(seq) en('open');
+      status('Ahora solo está encendida la luz de seguridad (inactínica).');
+    }},
+    {id:'open', label:'Abrir el chasis y sacar la película', disabled:seq, run:async()=>{
+      S.dr.chassis = true; S.film.inChassis = false; en('open',false);
+      if(S.dr.door === 'open' || S.dr.white) velar();
+      updateRoom(); applyFilm(); await wait(800);
+      en('hang');
+      status('Película fuera del chasis. Se coge siempre por los bordes.');
+    }},
+    {id:'hang', label:'Colocar la película en el colgador', disabled:true, run:async()=>{
+      S.dr.hung = true; en('hang',false); updateRoom(); await wait(1000);
+      status('La película está sujeta en el colgador, lista para revelar.');
+      showNext(2, 'Ir al revelado');
+    }},
+    {id:'white', label:'Encender la luz blanca', kind:'risk', hidden:!errorsMode, disabled:true, run:()=>{
+      lightOn(); en('white',false); en('light');
+      status('Has encendido la luz blanca.');
+    }}
+  ]);
+}
+
+function step2(){
+  setScene('tanks'); placeFilm(0, false, true); S.agitated = false;
+  const runDev = () => startTimer('dev', {auto:!errorsMode, maxR:2,
+    onTick:r => {
+      S.film.dev = r;
+      if(errorsMode && r > .15 && !S.agitated) S.film.bubbles = true;
+      S.film.over = r > 1.2 ? Math.min(.5, (r-1.2)*.7) : 0;
+      applyFilm();
+    },
+    onDone:() => { if(!errorsMode){ en('out'); status('¡Tiempo! El revelado ha terminado: saca la película.'); } }
+  });
+  setActions([
+    {id:'in', label:'Sumergir en el revelador', kind:'primary', run:async()=>{
+      en('in',false); await dip(true); S.film.wet = 1; tkBubbles(true); applyFilm();
+      en('ag');
+      if(errorsMode){ en('out'); runDev(); status('La película está en el revelador. Tú decides cuándo sacarla.'); }
+      else status('Han quedado burbujas de aire pegadas. Agita la película suavemente.');
+    }},
+    {id:'ag', label:'Agitar', disabled:true, run:async()=>{
+      agitate(); await wait(600); tkBubbles(false);
+      if(!S.agitated && !errorsMode){ S.agitated = true; en('ag',false); runDev(); status('Revelando… fíjate en cómo aparece la imagen.'); }
+      else { if(!S.film.bubbles) S.agitated = true; status('Has agitado la película.'); }
+    }},
+    {id:'out', label:'Sacar y escurrir', disabled:true, run:async()=>{
+      const r = S.timer ? S.timer.stop() : 0;
+      en('out',false); en('ag',false);
+      if(r < .7){ S.defects.add('subrev'); }
+      if(r > 1.25) S.defects.add('sobrerev');
+      if(S.film.bubbles) S.defects.add('burbujas');
+      tkBubbles(false); await dip(false);
+      status('Película revelada. La imagen ya es visible.');
+      showNext(3, 'Siguiente: aclarado');
+    }}
+  ]);
+}
+
+function step3(){
+  setScene('tanks');
+  setActions([
+    {id:'in', label:'Pasar al agua y sumergir', kind:'primary', run:async()=>{
+      en('in',false); const sk = $('#act-skip'); if(sk) sk.disabled = true;
+      await moveTo(1); await dip(true); agitate();
+      status('Aclarando…');
+      startTimer('rinse', {auto:true, onDone:()=>{ en('out'); status('Aclarado terminado. Ya no queda revelador.'); }});
+    }},
+    {id:'out', label:'Sacar y escurrir', disabled:true, run:async()=>{
+      en('out',false); await dip(false);
+      status('La película está limpia de revelador.');
+      showNext(4, 'Siguiente: fijado');
+    }},
+    {id:'skip', label:'Saltar el aclarado', kind:'risk', hidden:!errorsMode, run:()=>{
+      S.film.stains = true; S.defects.add('manchas'); goStep(4);
+    }}
+  ]);
+}
+
+function step4(){
+  setScene('tanks'); S.fixR = 0;
+  setActions([
+    {id:'in', label:'Pasar al fijador y sumergir', kind:'primary', run:async()=>{
+      en('in',false); await moveTo(2); await dip(true); agitate();
+      startTimer('fix', {auto:!errorsMode, maxR:2,
+        onTick:r => { S.fixR = r; S.film.clear = Math.min(r,1); applyFilm(); },
+        onDone:() => { if(!errorsMode){ en('out'); status('Fijado completo. La luz ya no afecta a la película.'); } }
+      });
+      if(errorsMode){ en('out'); status('La película está en el fijador. Tú decides cuándo sacarla.'); }
+      else status('Fijando… la película pierde su aspecto lechoso.');
+    }},
+    {id:'out', label:'Sacar y escurrir', disabled:true, run:async()=>{
+      const r = S.timer ? S.timer.stop() : 0; S.fixR = r;
+      en('out',false); const w = $('#act-white'); if(w) w.disabled = true;
+      if(r < .75){ S.defects.add('fijado'); S.film.milkyCap = Math.max(.15, r*.7); }
+      await dip(false);
+      if(!S.dr.white) lightOn();
+      applyFilm();
+      status('Fijado terminado. El técnico ya puede encender la luz blanca.');
+      showNext(5, 'Siguiente: lavado');
+    }},
+    {id:'white', label:'Encender la luz blanca', kind:'risk', hidden:!errorsMode, disabled:S.dr.white, run:()=>{
+      lightOn(); en('white',false); applyFilm();
+      status('Has encendido la luz blanca.');
+    }}
+  ]);
+}
+
+function step5(){
+  setScene('tanks');
+  const svg = () => $('#scn');
+  setActions([
+    {id:'in', label:'Pasar al lavado y abrir el agua', kind:'primary', run:async()=>{
+      en('in',false); await moveTo(3); svg().classList.add('s-wash'); await dip(true);
+      startTimer('wash', {auto:!errorsMode, maxR:1.6,
+        onDone:() => { if(!errorsMode){ en('out'); status('Lavado terminado. No quedan restos químicos.'); } }
+      });
+      if(errorsMode){ en('out'); status('La película se está lavando. Tú decides cuándo sacarla.'); }
+      else status('Lavando… el agua corriente arrastra los restos de fijador.');
+    }},
+    {id:'out', label:'Cerrar el agua y sacar', disabled:true, run:async()=>{
+      const r = S.timer ? S.timer.stop() : 0;
+      en('out',false); if(r < .75) S.defects.add('lavado');
+      svg().classList.remove('s-wash'); await dip(false);
+      status('Película lavada. Solo falta secarla.');
+      showNext(6, 'Siguiente: secado');
+    }}
+  ]);
+}
+
+function step6(){
+  setScene('dry');
+  const svg = () => $('#scn');
+  setActions([
+    {id:'in', label:'Colgar en la secadora', kind:'primary', run:async()=>{
+      en('in',false); svg().classList.add('s-dryhung'); await wait(800); svg().classList.add('s-air');
+      if(errorsMode) en('touch');
+      status('Secando con aire templado…');
+      startTimer('dry', {auto:true,
+        onTick:r => { S.film.wet = Math.max(0, 1 - r); applyFilm(); },
+        onDone:() => { svg().classList.remove('s-air'); en('out'); status('La película está seca.'); }
+      });
+    }},
+    {id:'touch', label:'Tocar la película para ver si está seca', kind:'risk', hidden:!errorsMode, disabled:true, run:()=>{
+      en('touch',false);
+      if(S.film.wet > .1){ S.film.finger = true; S.defects.add('huella'); applyFilm(); status('Has tocado la película.'); }
+      else status('Has tocado la película: ya estaba seca.');
+    }},
+    {id:'out', label:'Retirar la película y verla', disabled:true, kind:'next', run:()=>goStep(7)}
+  ]);
+}
+
+/* ---------- Resultado ---------- */
+function showResult(){
+  $('#work').hidden = true; $('#final').hidden = false;
+  if(S.defects.has('lavado')) S.film.yellow = .4;
+  S.film.wet = 0;
+  $('#lbFilm').innerHTML = filmSVG();
+  applyFilm();
+  const v = $('#verdict');
+  if(S.defects.size === 0){
+    v.innerHTML = `<div class="mission"><h2>MISIÓN CUMPLIDA</h2><p>Has revelado tu película radiográfica tradicional.</p></div>
+      <p class="note">Fíjate en la imagen: lo que recibió más radiación se ve <strong>negro</strong> (plata metálica) y los huesos, que frenaron los rayos X, se ven <strong>blancos</strong> (película transparente). La letra «D» es el marcador de plomo que indica el lado derecho.</p>`;
+  } else {
+    const items = [...S.defects].map(k => `<li><strong>${DEFECTS[k].t}.</strong> ${DEFECTS[k].d}</li>`).join('');
+    v.innerHTML = `<div class="failed"><h2>Película no válida para diagnóstico</h2><p style="margin:.4rem 0 0">Has llegado al final, pero algo ha salido mal:</p><ul>${items}</ul></div>
+      <p class="note">En un servicio real habría que repetir la radiografía, con una dosis de radiación más para el paciente. Prueba otra vez y evita estos errores.</p>`;
+  }
+  renderQuiz();
+  window.scrollTo({top: $('#final').offsetTop - 10, behavior:'smooth'});
+}
+
+function renderQuiz(){
+  const box = $('#quizBox'); let answered = 0, right = 0;
+  box.innerHTML = QUIZ.map((q,i) => `<div class="card q" data-i="${i}">
+      <h3><span>${i+1}.</span>${q.q}</h3>
+      <div class="opts">${q.o.map((o,j) => `<button type="button" class="opt" data-j="${j}"><span class="l">${'ABCD'[j]}</span><span>${o}</span></button>`).join('')}</div>
+      <p class="fb" hidden></p></div>`).join('') + '<div class="card score" id="score" hidden></div>';
+  box.querySelectorAll('.q').forEach(card => {
+    const q = QUIZ[+card.dataset.i];
+    card.querySelectorAll('.opt').forEach(btn => btn.addEventListener('click', () => {
+      const j = +btn.dataset.j, ok = j === q.a;
+      card.querySelectorAll('.opt').forEach(b => { b.disabled = true; if(+b.dataset.j === q.a) b.classList.add('right'); });
+      if(!ok) btn.classList.add('wrong');
+      const fb = card.querySelector('.fb'); fb.hidden = false;
+      fb.innerHTML = (ok ? '<strong class="ok">¡Correcto!</strong> ' : `<strong class="ko">No es correcto.</strong> La respuesta es la ${'ABCD'[q.a]}. `) + q.e;
+      answered++; if(ok) right++;
+      if(answered === QUIZ.length){
+        const s = $('#score'); s.hidden = false;
+        s.innerHTML = `Has acertado ${right} de ${QUIZ.length}. ` + (right === QUIZ.length ? '¡Enhorabuena!' : '<button type="button" class="btn" id="qRetry" style="margin-left:8px">Repetir cuestionario</button>');
+        const rb = $('#qRetry'); if(rb) rb.addEventListener('click', renderQuiz);
+      }
+    }));
+  });
+}
+
+/* ---------- Arranque ---------- */
+function restart(){
+  stopTimer();
+  S = freshState();
+  $('#latentChk').checked = false;
+  $('#filmBox').innerHTML = filmSVG();
+  goStep(0);
+}
+
+$('#latentChk').addEventListener('change', e => { S.film.latent = e.target.checked; applyFilm(); });
+const modeChk = $('#modeErr'), dlgMode = $('#dlgMode');
+function applyMode(){ errorsMode = modeChk.checked; $('#modeNote').hidden = !errorsMode; restart(); }
+modeChk.addEventListener('change', () => {
+  const started = S.step > 1 || (S.step === 1 && (S.dr.door === 'closed' || S.dr.chassis || !S.dr.white));
+  if(!started){ applyMode(); return; }
+  dlgMode.showModal();
+});
+$('#modeYes').addEventListener('click', () => { dlgMode.close('yes'); });
+$('#modeNo').addEventListener('click', () => { dlgMode.close('no'); });
+dlgMode.addEventListener('close', () => {
+  if(dlgMode.returnValue === 'yes') applyMode();
+  else modeChk.checked = errorsMode;
+  dlgMode.returnValue = '';
+});
+$('#btnRestart').addEventListener('click', restart);
+const again = () => { restart(); window.scrollTo({top:0, behavior:'smooth'}); };
+$('#btnAgain').addEventListener('click', again);
+$('#btnAgain2').addEventListener('click', again);
+const dlg = $('#dlgCurr');
+$('#btnCurr').addEventListener('click', () => dlg.showModal());
+$('#dlgClose').addEventListener('click', () => dlg.close());
+dlg.addEventListener('click', e => { if(e.target === dlg) dlg.close(); });
+
+buildSteps();
+restart();
+})();
+</script>
+</body>
+</html>
