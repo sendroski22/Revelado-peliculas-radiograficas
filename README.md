@@ -4,7 +4,7 @@ Web interactiva para aprender, paso a paso, cómo se revela a mano una película
 
 **CFGS Imagen para el diagnóstico y medicina nuclear** · Módulo 1346 - Fundamentos físicos y equipos
 
-🔗 **Acceso a la web:** `https://<usuario>.github.io/<repositorio>/`
+🔗 **Acceso a la web:** `https://sendroski22.github.io/Revelado-peliculas-radiograficas/`
 
 ---
 
