@@ -69,4 +69,4 @@ La radiografía de la mano es un dibujo esquemático original hecho con SVG, den
 
 Puedes compartir y adaptar este material siempre que cites la autoría, no lo uses con fines comerciales y compartas las obras derivadas con la misma licencia. El texto legal completo está en el archivo [`LICENSE`](LICENSE).
 
-Este material fue desarrollado con la asistencia del modelo de inteligencia artificial [Claude (Anthropic)](https://claude.ai/).
+Este material fue desarrollado con la asistencia del modelo de inteligencia artificial [Claude (Anthropic)](https://claude.ai/). 
